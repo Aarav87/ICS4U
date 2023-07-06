@@ -1,37 +1,32 @@
-## Body Mass Index Calculator Assignment
+### Body Mass Index Calculator Assignment
+
+## Subprograms
+
+# Gets valid input from the user
+def validate_input(measurement):
+    while True:
+        try:
+            # Ask user to enter value
+            user_value = float(input(f"Enter your {measurement.lower()}: "))
+
+            # Validate if value is positive
+            if user_value <= 0:
+                print(f"{measurement} must be positive!")
+            else:
+                return user_value
+
+        except ValueError:
+            print("Make sure you enter a positive number!")
+
+
+## Main Program
 
 # Output introduction about the program
 print("Welcome to the BMI Calculator!\n")
 
-# Get weight from user
-while True:
-    try:
-        # Ask user to enter weight
-        weight = float(input("Enter your weight (kg): "))
-
-        # Validate if weight is positive
-        if weight <= 0:
-            print("Weight must be positive!")
-        else:
-            break
-
-    except ValueError:
-        print("Make sure you enter a positive number!")
-
-# Get height from user
-while True:
-    try:
-        # Ask user to enter height
-        height = float(input("Enter your height (m): "))
-
-        # Height if height is positive
-        if height <= 0:
-            print("Height must be positive!")
-        else:
-            break
-
-    except ValueError:
-        print("Make sure you enter a positive number!")
+# Get height and weight from user
+weight = validate_input("Weight (kg)")
+height = validate_input("Height (m)")
 
 # Calculate BMI
 bmi = weight / (height ** 2)
