@@ -1,6 +1,8 @@
-### Body Mass Index Calculator Assignment
+# Body Mass Index Calculator Assignment
+# Name: Aarav Chhabra
+# Date: July 12, 2023
 
-## Subprograms
+# Subprograms
 
 # Gets valid input from the user
 def validate_input(measurement):
@@ -15,11 +17,12 @@ def validate_input(measurement):
             else:
                 return user_value
 
+        # Handle value error when letters are entered
         except ValueError:
             print("Make sure you enter a positive number!")
 
 
-## Main Program
+# Main Program
 
 # Output introduction about the program
 print("Welcome to the BMI Calculator!\n")
