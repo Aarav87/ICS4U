@@ -25,15 +25,20 @@ def get_input():
 # Output introduction message
 print("Welcome to the Swap Algorithm Simulator!")
 
-# Get validated input from the user
-data = get_input()
+# Keeps track of if the simulator is running
+running = "Y"
 
-# Generate random indices for the swap
-index0, index1, index2 = random.sample(range(3), 3)
+# Loop as long as the user wants the simulator to run
+while running == "Y":
+    # Get validated input from the user
+    data = get_input()
 
-# Swap the user's input
-new_data = [data[index0], data[index1], data[index2]]
+    # Swap the user's input
+    new_data = [data[1], data[2], data[0]]
 
-# Output data before and after swap
-print("Before swap:", data[0], data[1], data[2])
-print("After swap:", new_data[0], new_data[1], new_data[2])
+    # Output data before and after swap
+    print("Before swap:", data[0], data[1], data[2])
+    print("After swap:", new_data[0], new_data[1], new_data[2])
+
+    # Ask user if they want to continue the simulator
+    running = input("\nDo you want to continue the simulator (Y/N): ").upper()
