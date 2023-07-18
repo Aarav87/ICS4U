@@ -2,9 +2,6 @@
 # Name: Aarav Chhabra
 # Date: July 20, 2023
 
-import random
-
-
 # Subprograms
 
 # Gets validated input from the user
