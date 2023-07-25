@@ -194,6 +194,9 @@ class Checkout(BasePage):
 
     # Handle cash payment
     def handleCashPayment(self):
+        # Hide the error message for invalid payment
+        self.invalidPaymentMsg.grid_remove()
+
         # Get the value from the entry box
         amountPaid = self.payCashInput.get()
 
