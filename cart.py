@@ -2,6 +2,7 @@
 # Name: Aarav Chhabra
 # Date: July 25, 2023
 
+import os
 import random
 import customtkinter as ctk
 
@@ -159,7 +160,7 @@ class ShopPage(BasePage):
 
 
 # Class for the checkout page
-class Checkout(BasePage):
+class CheckoutPage(BasePage):
     def __init__(self, master, cart):
         super().__init__(master, "Checkout 💰", cart)
 
@@ -179,18 +180,12 @@ class Checkout(BasePage):
         # Initialize invalid payment message
         self.invalidPaymentMsg = ctk.CTkLabel(self, text="Make sure you enter a number greater than the cost.", compound="left", padx=5, anchor="w")
 
-        # Initialize receipt labels
-        self.receiptLabel = ctk.CTkLabel(self, text="---Receipt---", compound="left", padx=5, anchor="w")
-        self.totalLabel = ctk.CTkLabel(self, compound="left", padx=5, anchor="w")
-        self.amountPaid = ctk.CTkLabel(self, compound="left", padx=5, anchor="w")
-        self.change = ctk.CTkLabel(self, compound="left", padx=5, anchor="w")
-
         # List of coin denominations
         self.denominations = [2, 1, 0.25, 0.10, 0.05]
 
     # Handles credit payment
     def handleCreditPayment(self):
-        self.displayReceipt(self.shoppingCart.totalPrice, 0)
+        self.createReceipt(self.shoppingCart.totalPrice, 0)
 
     # Handle cash payment
     def handleCashPayment(self):
@@ -213,7 +208,7 @@ class Checkout(BasePage):
                 coins = self.calculateChange(changeDue)
 
                 # Display a receipt on screen
-                self.displayReceipt(amountPaid, changeDue, coins=coins)
+                self.createReceipt(amountPaid, changeDue, coins=coins)
             else:
                 # Show error message for invalid payment
                 self.invalidPaymentMsg.grid(row=5, column=0, pady=(0, 10), padx=(0, 5), sticky="w")
@@ -247,39 +242,35 @@ class Checkout(BasePage):
 
         return coins
 
-    # Displays a receipt on the screen
-    def displayReceipt(self, amountPaid, change, coins=None):
+    # Creates a receipt in a text file
+    def createReceipt(self, amountPaid, change, coins=[]):
         # Hide payment options
         self.hidePayment()
 
-        # Render receipt title label
-        self.receiptLabel.grid(row=1, column=0, pady=(0, 10), padx=(0, 5), sticky="w")
+        # Create receipt as a text file
+        with open("receipt.txt", "w") as file:
+            file.write("------RECEIPT------\n")
+            file.write(f"Total: ${round(self.shoppingCart.totalPrice, 2)}\n")
+            file.write(f"Total: ${round(self.shoppingCart.totalPrice, 2)}\n")
+            file.write(f"Amount Paid: ${round(amountPaid, 2)}\n")
+            file.write(f"Change: ${round(change, 2)}\n")
 
-        # Render total amount label
-        self.totalLabel.configure(text=f"Total: ${round(self.shoppingCart.totalPrice, 2)}")
-        self.totalLabel.grid(row=2, column=0, pady=(0, 10), padx=(0, 5), sticky="w")
-
-        # Update and render amount paid and change due
-        self.amountPaid.configure(text=f"Amount Paid: ${round(amountPaid, 2)}")
-        self.amountPaid.grid(row=3, column=0, pady=(0, 10), sticky="w")
-        self.change.configure(text=f"Change: ${round(change, 2)}")
-        self.change.grid(row=4, column=0, pady=(0, 10), sticky="w")
-
-        # Keep track of the current row
-        row = 5
-
-        # Loop through each coin denomination
-        for coin in range(5):
-            # Display the number of coins if it's used in the change
-            if coins[coin] > 0:
-                label = ctk.CTkLabel(self, text=f"${self.denominations[coin]} Coins: {coins[coin]}", compound="left", padx=5, anchor="w")
-                label.grid(row=row, column=0, pady=(0, 10), sticky="w")
-                row += 1
+            # Loop through each coin denomination
+            for coin in range(len(coins)):
+                # Add the number of coins to the text file if it's used in the change
+                if coins[coin] > 0:
+                    file.write(f"${self.denominations[coin]} Coins: {coins[coin]}\n")
 
         # Clear shopping cart
         self.shoppingCart.cart.clear()
         self.shoppingCart.numOfItems = 0
         self.shoppingCart.totalPrice = 0
+
+        # Show empty cart message
+        self.invalidCheckoutMessage()
+
+        # Open the receipt
+        os.system("receipt.txt")
 
     # Displays a message when the user goes on the checkout page with an empty cart
     def invalidCheckoutMessage(self):
@@ -345,7 +336,7 @@ class App(ctk.CTk):
         # Initialize the shop, cart, and checkout page
         self.shopPage = ShopPage(self, self.shoppingCart)
         self.cartPage = CartPage(self, self.shoppingCart)
-        self.checkoutPage = Checkout(self, self.shoppingCart)
+        self.checkoutPage = CheckoutPage(self, self.shoppingCart)
 
         # Show the shop page
         self.showShopPage()
