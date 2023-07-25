@@ -258,7 +258,7 @@ class Checkout(BasePage):
         self.totalLabel.grid(row=2, column=0, pady=(0, 10), padx=(0, 5), sticky="w")
 
         # Update and render amount paid and change due
-        self.amountPaid.configure(text=f"Amount Paid: ${amountPaid}")
+        self.amountPaid.configure(text=f"Amount Paid: ${round(amountPaid, 2)}")
         self.amountPaid.grid(row=3, column=0, pady=(0, 10), sticky="w")
         self.change.configure(text=f"Change: ${round(change, 2)}")
         self.change.grid(row=4, column=0, pady=(0, 10), sticky="w")
