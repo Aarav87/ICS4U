@@ -2,7 +2,7 @@
 # Name: Aarav Chhabra
 # Date: July 25, 2023
 
-import os
+import subprocess
 import random
 import customtkinter as ctk
 
@@ -237,7 +237,7 @@ class CheckoutPage(BasePage):
                 i += 1
 
         # Round to the nearest nickel if there is more than 3 cents of change remaining
-        if change >= 3:
+        if change >= 0.03:
             coins[i] += 1
 
         return coins
@@ -250,7 +250,6 @@ class CheckoutPage(BasePage):
         # Create receipt as a text file
         with open("receipt.txt", "w") as file:
             file.write("------RECEIPT------\n")
-            file.write(f"Total: ${round(self.shoppingCart.totalPrice, 2)}\n")
             file.write(f"Total: ${round(self.shoppingCart.totalPrice, 2)}\n")
             file.write(f"Amount Paid: ${round(amountPaid, 2)}\n")
             file.write(f"Change: ${round(change, 2)}\n")
@@ -270,7 +269,7 @@ class CheckoutPage(BasePage):
         self.invalidCheckoutMessage()
 
         # Open the receipt
-        os.system("receipt.txt")
+        subprocess.call(["receipt.txt"], shell=True)
 
     # Displays a message when the user goes on the checkout page with an empty cart
     def invalidCheckoutMessage(self):
