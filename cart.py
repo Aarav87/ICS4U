@@ -59,7 +59,7 @@ class CartPage(BasePage):
         self.labels = []
         self.buttons = []
 
-    # Display cart items on the screen
+    # Displays cart items on the screen
     def displayItems(self):
         # Clear the labels and buttons list
         self.labels.clear()
@@ -77,6 +77,13 @@ class CartPage(BasePage):
             self.labels.append(label)
             self.buttons.append(button)
 
+    # Deletes cart items from the screen (labels and buttons) if they exist
+    def deleteItems(self):
+        if self.labels:
+            for i in range(len(self.labels)):
+                self.labels[i].destroy()
+                self.buttons[i].destroy()
+
     # Removes an item from the cart using the index of the button clicked
     def removeFromCart(self, index):
         # Update the cart's total price
@@ -87,9 +94,7 @@ class CartPage(BasePage):
         self.shoppingCart.numOfItems -= 1
 
         # Delete all the cart items from the screen
-        for i in range(self.shoppingCart.numOfItems + 1):
-            self.labels[i].destroy()
-            self.buttons[i].destroy()
+        self.deleteItems()
 
         # Rerender the cart items on the screen
         self.displayItems()
@@ -164,8 +169,11 @@ class CheckoutPage(BasePage):
     def __init__(self, master, cart):
         super().__init__(master, "Checkout 💰", cart)
 
-        # Message for when user can't checkout
-        self.invalidCheckout = ctk.CTkLabel(self, text="There is nothing in the cart. Cannot checkout.", compound="left", padx=5, anchor="w")
+        # Initialize all the error messages
+        self.emptyCartMsg = ctk.CTkLabel(self, text="There is nothing in the cart. Cannot checkout.", compound="left", padx=5, anchor="w")
+        self.lessMoneyMsg = ctk.CTkLabel(self, text="Please give more money than the total price.", compound="left", padx=5, anchor="w")
+        self.enterNumbersMsg = ctk.CTkLabel(self, text="Please enter numbers for money amount.", compound="left", padx=5, anchor="w")
+        self.unnecessaryChange = ctk.CTkLabel(self, text="Please do not provide unnecessary change (max change $100).", compound="left", padx=5, anchor="w")
 
         # Initialize label for total price
         self.finalPrice = ctk.CTkLabel(self, text=f"Final Price - ${round(self.shoppingCart.totalPrice, 2)}", compound="left", padx=5, anchor="w")
@@ -177,20 +185,25 @@ class CheckoutPage(BasePage):
         self.optionLabel = ctk.CTkLabel(self, text="OR", compound="left", padx=5, anchor="w")
         self.payCreditButton = ctk.CTkButton(self, text="Pay Credit", width=100, height=24, command=lambda: self.handleCreditPayment())
 
-        # Initialize invalid payment message
-        self.invalidPaymentMsg = ctk.CTkLabel(self, text="Make sure you enter a number greater than the cost.", compound="left", padx=5, anchor="w")
-
         # List of coin denominations
         self.denominations = [2, 1, 0.25, 0.10, 0.05]
 
     # Handles credit payment
     def handleCreditPayment(self):
+        # Hide the error messages for invalid payment
+        self.lessMoneyMsg.grid_remove()
+        self.unnecessaryChange.grid_remove()
+        self.enterNumbersMsg.grid_remove()
+
+        # Create the receipt
         self.createReceipt(self.shoppingCart.totalPrice, 0)
 
     # Handle cash payment
     def handleCashPayment(self):
-        # Hide the error message for invalid payment
-        self.invalidPaymentMsg.grid_remove()
+        # Hide the error messages for invalid payment
+        self.lessMoneyMsg.grid_remove()
+        self.unnecessaryChange.grid_remove()
+        self.enterNumbersMsg.grid_remove()
 
         # Get the value from the entry box
         amountPaid = self.payCashInput.get()
@@ -201,21 +214,26 @@ class CheckoutPage(BasePage):
 
             # Check if user paid more than the total price
             if amountPaid >= self.shoppingCart.totalPrice:
-                # Calculate the change due
-                changeDue = amountPaid - self.shoppingCart.totalPrice
+                # Check if user paid within $100 of the cart price (unnecessary change otherwise)
+                if amountPaid <= (self.shoppingCart.totalPrice + 100):
+                    # Calculate the change due
+                    changeDue = round(amountPaid - self.shoppingCart.totalPrice, 2)
 
-                # Get the number of coins needed of each denomination for the change
-                coins = self.calculateChange(changeDue)
+                    # Get the number of coins needed of each denomination for the change
+                    coins = self.calculateChange(changeDue)
 
-                # Display a receipt on screen
-                self.createReceipt(amountPaid, changeDue, coins=coins)
+                    # Display a receipt on screen
+                    self.createReceipt(amountPaid, changeDue, coins=coins)
+                else:
+                    # Show unnecessary change message
+                    self.unnecessaryChange.grid(row=5, column=0, pady=(0, 10), padx=(0, 5), sticky="w")
             else:
-                # Show error message for invalid payment
-                self.invalidPaymentMsg.grid(row=5, column=0, pady=(0, 10), padx=(0, 5), sticky="w")
+                # Show error message for less money entered
+                self.lessMoneyMsg.grid(row=5, column=0, pady=(0, 10), padx=(0, 5), sticky="w")
 
-        # Show error message for invalid payment
+        # Show error message for letters entered
         except ValueError:
-            self.invalidPaymentMsg.grid(row=5, column=0, pady=(0, 10), padx=(0, 5), sticky="w")
+            self.enterNumbersMsg.grid(row=5, column=0, pady=(0, 10), padx=(0, 5), sticky="w")
 
     # Calculates the number of coins needed of each denomination
     def calculateChange(self, change):
@@ -230,7 +248,7 @@ class CheckoutPage(BasePage):
             # Check if the change is greater than the value of the current coin
             if change >= self.denominations[i]:
                 # Reduce change by that coin and increase the coin count
-                change -= self.denominations[i]
+                change = round(change - self.denominations[i], 2)
                 coins[i] += 1
             else:
                 # Change the current coin
@@ -238,7 +256,7 @@ class CheckoutPage(BasePage):
 
         # Round to the nearest nickel if there is more than 3 cents of change remaining
         if change >= 0.03:
-            coins[i] += 1
+            coins[4] += 1
 
         return coins
 
@@ -252,13 +270,13 @@ class CheckoutPage(BasePage):
             file.write("------RECEIPT------\n")
             file.write(f"Total: ${round(self.shoppingCart.totalPrice, 2)}\n")
             file.write(f"Amount Paid: ${round(amountPaid, 2)}\n")
-            file.write(f"Change: ${round(change, 2)}\n")
+            file.write(f"Change: ${change}\n")
 
             # Loop through each coin denomination
             for coin in range(len(coins)):
                 # Add the number of coins to the text file if it's used in the change
                 if coins[coin] > 0:
-                    file.write(f"${self.denominations[coin]} Coins: {coins[coin]}\n")
+                    file.write(f"${round(self.denominations[coin], 2)} Coins: {coins[coin]}\n")
 
         # Clear shopping cart
         self.shoppingCart.cart.clear()
@@ -266,21 +284,21 @@ class CheckoutPage(BasePage):
         self.shoppingCart.totalPrice = 0
 
         # Show empty cart message
-        self.invalidCheckoutMessage()
+        self.showEmptyCartMsg()
 
         # Open the receipt
-        subprocess.call(["receipt.txt"], shell=True)
+        subprocess.Popen("receipt.txt", shell=True)
 
     # Displays a message when the user goes on the checkout page with an empty cart
-    def invalidCheckoutMessage(self):
+    def showEmptyCartMsg(self):
         # Check if cart is empty
         if self.shoppingCart.numOfItems == 0:
             # Display the message and hide payment options
-            self.invalidCheckout.grid(row=0, column=0, pady=(0, 10), sticky="w")
+            self.emptyCartMsg.grid(row=0, column=0, pady=(0, 10), sticky="w")
             self.hidePayment()
         else:
             # Hide the message and show payment options
-            self.invalidCheckout.grid_remove()
+            self.emptyCartMsg.grid_remove()
             self.showPayment()
 
     # Displays payment options
@@ -358,7 +376,8 @@ class App(ctk.CTk):
         # Display a message if the cart is empty
         self.cartPage.emptyCartMessage()
 
-        # Render the items in the cart
+        # Deletes the items in the cart off the screen and re-renders them
+        self.cartPage.deleteItems()
         self.cartPage.displayItems()
 
     # Shows the checkout page
@@ -371,7 +390,7 @@ class App(ctk.CTk):
         self.checkoutPage.finalPrice.configure(text=f"Final Price - ${round(self.shoppingCart.totalPrice, 2)}")
 
         # Display a message when the user goes on the checkout page with an empty cart
-        self.checkoutPage.invalidCheckoutMessage()
+        self.checkoutPage.showEmptyCartMsg()
 
 
 # Main
